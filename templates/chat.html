@@ -1,6 +1,5 @@
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
 <!DOCTYPE html>
 <html>
@@ -22,12 +21,11 @@
 							<div class="d-flex bd-highlight">
 								<div class="img_cont">
 									<img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img">
-									<!-- <img src="https://www.prdistribution.com/spirit/uploads/pressreleases/2019/newsreleases/d83341deb75c4c4f6b113f27b1e42cd8-chatbot-florence-already-helps-thousands-of-patients-to-remember-their-medication.png" class="rounded-circle user_img"> -->
 									<span class="online_icon"></span>
 								</div>
 								<div class="user_info">
-									<span>Medical Chatbot</span>
-									<p>Ask me anything!</p>
+									<span>MediChat</span>
+									<p>Your AI-powered health information assistant. Ask me anything!</p>
 								</div>
 							</div>
 						</div>
@@ -42,7 +40,12 @@
 									<button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
 								</div>
 							</form>
+							<div class="disclaimer">
+								<strong>Medical Disclaimer:</strong> This chatbot provides general health information only and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns.
+							</div>
 						</div>
+
+						
 					</div>
 				</div>
 			</div>
@@ -54,7 +57,7 @@
 					const date = new Date();
 					const hour = date.getHours();
 					const minute = date.getMinutes();
-					const str_time = hour+":"+minute;
+					const str_time = hour+":"+minute.toString().padStart(2, '0');
 					var rawText = $("#text").val();
 
 					var userHtml = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send">' + rawText + '<span class="msg_time_send">'+ str_time + '</span></div><div class="img_cont_msg"><img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg"></div></div>';
