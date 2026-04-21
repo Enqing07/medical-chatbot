@@ -13,8 +13,8 @@ pip install -r requirements.txt
 ```
 4. Set up environment variables. Create a `.env` file in the root directory:
 ```bash
-PINECONE_API_KEY="your_pinecone_api_keyy"
-HUGGINGFACEHUB_API_TOKEN="your_huggingface_token"
+PINECONE_API_KEY=""
+HUGGINGFACEHUB_API_TOKEN=""
 ```
 3. Run the app:
 ```bash
