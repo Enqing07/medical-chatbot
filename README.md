@@ -1,30 +1,28 @@
-# 🏥 MediChat: AI-Powered Medical Chatbot
+# MediChat: AI-Powered Medical Chatbot🏥
 MediChat is a **context-aware medical chatbot** built using **Flask, LangChain, and Retrieval-Augmented Generation (RAG)**. It leverages a vector database and large language models to provide more accurate and relevant responses to user queries, while maintaining **conversation memory** for a more natural chat experience.
 
 ---
 
-## 🚀 Features
+## Features
 
 - **RAG Pipeline** - Retrieves top-3 semantically similar documents from Pinecone before generating answers
+- **Semantic Embeddings** - Uses HuggingFace `sentence-transformers/all-MiniLM-L6-v2` for efficient vector representation and similarity search
 - **Conversational Memory** - Each user session maintains independent chat history across multiple turns
 - **History-Aware Retrieval** - Rephrases follow-up questions into standalone queries using prior context
 - **HuggingFace LLM** - Powered by `openai/gpt-oss-120b` via HuggingFace Inference Endpoint
 
 ---
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Flask |
-| LLM | HuggingFace `openai/gpt-oss-120b` |
-| Embeddings | HuggingFace `sentence-transformers/all-MiniLM-L6-v2`|
-| Vector DB | Pinecone |
-| RAG Orchestration | LangChain |
-| Frontend | HTML/CSS |
+## Tech Stack
+![Flask](https://img.shields.io/badge/Framework-Flask-black?logo=flask)
+![HuggingFace](https://img.shields.io/badge/LLM-HuggingFace-orange?logo=huggingface)
+![SentenceTransformers](https://img.shields.io/badge/Embeddings-MiniLM--L6--v2-blue)
+![Pinecone](https://img.shields.io/badge/VectorDB-Pinecone-0066FF)
+![LangChain](https://img.shields.io/badge/RAG-LangChain-green)
+![HTML5](https://img.shields.io/badge/Frontend-HTML%2FCSS-E34F26?logo=html5)
 
 ---
-## ⚙️ Installation and Requirements
+## Installation and Requirements
 
 1. In your terminal, clone the repository:
 ```bash
