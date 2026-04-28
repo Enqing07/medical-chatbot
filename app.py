@@ -28,20 +28,20 @@ os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
 
+print("Step 1: Downloading embeddings...")
 embeddings = download_hugging_face_embeddings()
+print("Step 2: Embeddings loaded. Connecting to Pinecone...")
 
-# Connect to vector database
-index_name = "medical-chatbot" 
+index_name = "medical-chatbot"
 
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=index_name,
     embedding=embeddings
 )
+print("Step 3: Pinecone connected. Setting up LLM...")
 
-# Setup retriver
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3}) # top 3 similar documents
+retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
 
-# Setup LLM
 llm = HuggingFaceEndpoint(
     repo_id="openai/gpt-oss-120b",
     max_new_tokens=256,
@@ -49,6 +49,7 @@ llm = HuggingFaceEndpoint(
     huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
 )
 chatModel = ChatHuggingFace(llm=llm)
+print("Step 4: LLM ready. App startup complete.")
 
 
 # Prompt to rephrase the question using chat history
