@@ -2,9 +2,9 @@ from flask import Flask, render_template, request, session
 from src.helper import download_hugging_face_embeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import ChatOpenAI
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_history_aware_retriever
+from langchain_classic.chains import create_retrieval_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains import create_history_aware_retriever          
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder  
 from langchain_core.runnables.history import RunnableWithMessageHistory    
 from langchain_community.chat_message_histories import ChatMessageHistory  
@@ -28,20 +28,20 @@ os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
 
-print("Step 1: Downloading embeddings...")
 embeddings = download_hugging_face_embeddings()
-print("Step 2: Embeddings loaded. Connecting to Pinecone...")
 
-index_name = "medical-chatbot"
+# Connect to vector database
+index_name = "medical-chatbot" 
 
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=index_name,
     embedding=embeddings
 )
-print("Step 3: Pinecone connected. Setting up LLM...")
 
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
+# Setup retriver
+retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3}) # top 3 similar documents
 
+# Setup LLM
 llm = HuggingFaceEndpoint(
     repo_id="openai/gpt-oss-120b",
     max_new_tokens=256,
@@ -49,7 +49,6 @@ llm = HuggingFaceEndpoint(
     huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
 )
 chatModel = ChatHuggingFace(llm=llm)
-print("Step 4: LLM ready. App startup complete.")
 
 
 # Prompt to rephrase the question using chat history
@@ -122,5 +121,4 @@ def chat():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port= 8080, debug= True)
