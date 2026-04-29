@@ -5,9 +5,9 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_history_aware_retriever
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder  
-from langchain_core.runnables.history import RunnableWithMessageHistory    
-from langchain_community.chat_message_histories import ChatMessageHistory  
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace
 from dotenv import load_dotenv
 from src.prompts import *
@@ -16,92 +16,85 @@ import uuid
 
 app = Flask(__name__)
 
-app.secret_key = os.urandom(24)  # Required for session (tracking users)
+app.secret_key = os.urandom(24)
 
-# Load environment variables
 load_dotenv()
 
-PINECONE_API_KEY=os.environ.get('PINECONE_API_KEY')
+PINECONE_API_KEY = os.environ.get('PINECONE_API_KEY')
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = HUGGINGFACEHUB_API_TOKEN
 
-
-embeddings = download_hugging_face_embeddings()
-
-# Connect to vector database
-index_name = "medical-chatbot" 
-
-docsearch = PineconeVectorStore.from_existing_index(
-    index_name=index_name,
-    embedding=embeddings
-)
-
-# Setup retriver
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3}) # top 3 similar documents
-
-# Setup LLM
-llm = HuggingFaceEndpoint(
-    repo_id="openai/gpt-oss-120b",
-    max_new_tokens=256,
-    do_sample=False,
-    huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
-)
-chatModel = ChatHuggingFace(llm=llm)
-
-
-# Prompt to rephrase the question using chat history
-contextualize_q_prompt = ChatPromptTemplate.from_messages([
-    ("system",
-     "Given the chat history and the latest user question, "
-     "rephrase it into a standalone question. "
-     "Do NOT answer it. If no rephrasing is needed, return it as-is."),
-    MessagesPlaceholder("chat_history"),
-    ("human", "{input}"),
-])
-
-# Retriever with previous conversation context
-history_aware_retriever = create_history_aware_retriever(
-    chatModel, retriever, contextualize_q_prompt
-)
-
-# Main prompt, includes chat_history
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),           # your existing system prompt
-    MessagesPlaceholder("chat_history"), # injected conversation turns
-    ("human", "{input}"),
-])
-
-
-question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
-rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
-
-
-# In-memory store mapping session_id -> ChatMessageHistory
-chat_histories: dict[str, ChatMessageHistory] = {}  
+chat_histories: dict[str, ChatMessageHistory] = {}
+conversational_rag_chain = None
 
 def get_session_history(session_id: str) -> ChatMessageHistory:
-    if session_id not in chat_histories: # new user create new memory
+    if session_id not in chat_histories:
         chat_histories[session_id] = ChatMessageHistory()
     return chat_histories[session_id]
 
-conversational_rag_chain = RunnableWithMessageHistory(
-    rag_chain,
-    get_session_history,
-    input_messages_key="input",
-    history_messages_key="chat_history",
-    output_messages_key="answer",
-)
+def initialize():
+    global conversational_rag_chain
+    if conversational_rag_chain is not None:
+        return
+
+    embeddings = download_hugging_face_embeddings()
+
+    docsearch = PineconeVectorStore.from_existing_index(
+        index_name="medical-chatbot",
+        embedding=embeddings
+    )
+
+    retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+
+    llm = HuggingFaceEndpoint(
+        repo_id="openai/gpt-oss-120b",
+        max_new_tokens=256,
+        do_sample=False,
+        huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
+    )
+    chatModel = ChatHuggingFace(llm=llm)
+
+    contextualize_q_prompt = ChatPromptTemplate.from_messages([
+        ("system",
+         "Given the chat history and the latest user question, "
+         "rephrase it into a standalone question. "
+         "Do NOT answer it. If no rephrasing is needed, return it as-is."),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ])
+
+    history_aware_retriever = create_history_aware_retriever(
+        chatModel, retriever, contextualize_q_prompt
+    )
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder("chat_history"),
+        ("human", "{input}"),
+    ])
+
+    question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
+    rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
+
+    conversational_rag_chain = RunnableWithMessageHistory(
+        rag_chain,
+        get_session_history,
+        input_messages_key="input",
+        history_messages_key="chat_history",
+        output_messages_key="answer",
+    )
+
+@app.before_request
+def before_request():
+    initialize()
 
 @app.route("/")
 def index():
-    # Assign a unique session ID to each user
     if "session_id" not in session:
         session["session_id"] = str(uuid.uuid4())
     return render_template('chat.html')
-
-
 
 @app.route("/get", methods=["GET", "POST"])
 def chat():
@@ -111,14 +104,12 @@ def chat():
 
     response = conversational_rag_chain.invoke(
         {"input": msg},
-        config={"configurable": {"session_id": session_id}},  # ties history to user
+        config={"configurable": {"session_id": session_id}},
     )
 
     answer = response["answer"]
     print(f"[{session_id}] Bot: {answer}")
     return str(answer)
-
-
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
