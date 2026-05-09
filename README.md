@@ -1,6 +1,8 @@
 # MediChat: AI-Powered Medical Chatbot🏥
 MediChat is a **context-aware medical chatbot** built using **Flask, LangChain, and Retrieval-Augmented Generation (RAG)**. It leverages a vector database and large language models to provide more accurate and relevant responses to user queries, while maintaining **conversation memory** for a more natural chat experience.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://medical-chatbot-1-zqya.onrender.com/)
+
 ---
 
 ## Features
